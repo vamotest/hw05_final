@@ -11,8 +11,8 @@ from .models import Post, User, Group, Comment, Follow
 class TestStringMethods(TestCase):
 
     POST_CACHE = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.dummy.DummyCache'
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache"
         }
     }
 
@@ -31,20 +31,20 @@ class TestStringMethods(TestCase):
     password_3 = fake_data.fake_password()
 
     @staticmethod
-    def upload_image():
+    def get_image():
         return SimpleUploadedFile(
-            'test.gif',
+            "test.gif",
             (
-                b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00'
-                b'\x21\xf9\x04\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00'
-                b'\x01\x00\x01\x00\x00\x02\x02\x4c\x01\x00\x3b'
+                b"\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00"
+                b"\x21\xf9\x04\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00"
+                b"\x01\x00\x01\x00\x00\x02\x02\x4c\x01\x00\x3b"
             ),
-            content_type='image/gif'
+            content_type="image/gif"
         )
 
     @staticmethod
     def upload_not_image():
-        return SimpleUploadedFile('file.txt', b'i-am-a-text-file')
+        return SimpleUploadedFile("file.txt", b"i-am-a-text-file")
 
     def setUp(self, user_1=user_1, email_1=email_1, password_1=password_1):
         self.user = User.objects.create_user(
@@ -67,7 +67,7 @@ class TestStringMethods(TestCase):
             reverse(
                 "profile",
                 kwargs={
-                    'username': self.user.username
+                    "username": self.user.username
                 }
             )
         )
@@ -77,8 +77,8 @@ class TestStringMethods(TestCase):
         response = self.client.post(
             reverse("new_post"),
             data={
-                'group': self.group.id,
-                'text': self.text
+                "group": self.group.id,
+                "text": self.text
             },
             follow=True)
         self.assertEqual(response.status_code, 200)
@@ -93,61 +93,64 @@ class TestStringMethods(TestCase):
         response = self.non_auth_client.post(
             reverse("new_post"),
             data={
-                'post': self.text
+                "post": self.text
             }
         )
-        self.assertRedirects(response, "/auth/login/?next=/new/")
+
+        self.assertRedirects(
+            response, reverse("login") + "?next=" + reverse("new_post")
+        )
         self.assertEqual(Post.objects.count(), 0)
 
     @override_settings(CACHES=POST_CACHE)
     def check_contain_post(self, url, user, group, text):
         response = self.client.get(url)
 
-        if 'paginator' in response.context:
-            self.assertEqual(response.context['paginator'].count, 1)
-            post = response.context['page'][0]
+        if "paginator" in response.context:
+            self.assertEqual(response.context["paginator"].count, 1)
+            post = response.context["page"][0]
         else:
-            post = response.context['post']
+            post = response.context["post"]
 
         self.assertEqual(post.text, text)
         self.assertEqual(post.group, group)
         self.assertEqual(post.author, user)
         self.assertTrue(post.image)
-        self.assertContains(response, '<img')
+        self.assertContains(response, "<img")
 
     def test_check_post(self):
         post = Post.objects.create(
             text=self.text, group=self.group, author=self.user
         )
-        image = self.upload_image()
+        image = self.get_image()
 
         self.client.post(
             reverse(
                 "post_edit",
                 kwargs={
-                    'username': self.user.username,
-                    'post_id': post.id
+                    "username": self.user.username,
+                    "post_id": post.id
                 }
             ),
             data={
-                'group': self.group.id,
-                'text': self.text,
-                'image': image
+                "group": self.group.id,
+                "text": self.text,
+                "image": image
             },
             follow=True
         )
 
         urls = [
-            reverse('index'),
-            reverse('profile', kwargs={'username': self.user.username}),
+            reverse("index"),
+            reverse("profile", kwargs={"username": self.user.username}),
             reverse(
-                'post',
+                "post",
                 kwargs={
-                    'username': self.user.username,
-                    'post_id': post.id
+                    "username": self.user.username,
+                    "post_id": post.id
                 }
             ),
-            reverse('groups', kwargs={'slug': self.group.slug}),
+            reverse("group", kwargs={"slug": self.group.slug}),
         ]
 
         for url in urls:
@@ -165,22 +168,22 @@ class TestStringMethods(TestCase):
             reverse(
                 "post_edit",
                 kwargs={
-                    'username': self.user.username,
-                    'post_id': post.id
+                    "username": self.user.username,
+                    "post_id": post.id
                 }
             ),
             data={
-                'group': self.group.id,
-                'text': self.text,
-                'image': no_image
+                "group": self.group.id,
+                "text": self.text,
+                "image": no_image
             },
             forward=True
         )
 
         self.assertFormError(
-            response, 'form', 'image',
-            'Загрузите правильное изображение. Файл, который вы загрузили, '
-            'поврежден или не является изображением.'
+            response, "form", "image",
+            "Загрузите правильное изображение. Файл, который вы загрузили, "
+            "поврежден или не является изображением."
         )
 
     def test_check_edit(self):
@@ -191,61 +194,61 @@ class TestStringMethods(TestCase):
             title="title_2", slug="slug_2", description="desc_2"
         )
         new_text = "text_2"
-        image = self.upload_image()
+        image = self.get_image()
 
         self.client.post(
             reverse(
                 "post_edit",
                 kwargs={
-                    'username': self.user.username,
-                    'post_id': post.id
+                    "username": self.user.username,
+                    "post_id": post.id
                 }
             ),
             data={
-                'group': group.id,
-                'text': new_text,
-                'image': image
+                "group": group.id,
+                "text": new_text,
+                "image": image
             },
             follow=True
         )
 
-        urls = [
-            reverse('index'),
-            reverse('profile', kwargs={'username': self.user.username}),
+        urls = (
+            reverse("index"),
+            reverse("profile", kwargs={"username": self.user.username}),
             reverse(
-                'post',
+                "post",
                 kwargs={
-                    'username': self.user.username,
-                    'post_id': post.id
+                    "username": self.user.username,
+                    "post_id": post.id
                 }
             )
-        ]
+        )
 
         for url in urls:
             with self.subTest(url=url):
                 self.check_contain_post(url, self.user, group, new_text)
         response = self.client.get(
             reverse(
-                'groups',
+                "group",
                 kwargs={
-                    'slug': self.group.slug
+                    "slug": self.group.slug
                 }
             )
         )
-        self.assertEqual(response.context['paginator'].count, 0)
+        self.assertEqual(response.context["paginator"].count, 0)
 
     def test_cache(self):
-        self.client.get(reverse('index'))
+        self.client.get(reverse("index"))
         post = Post.objects.create(
-            text='new text', group=self.group, author=self.user
+            text="new text", group=self.group, author=self.user
         )
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse("index"))
         self.assertNotContains(response, post.text)
 
-        key = make_template_fragment_key('index_page')
+        key = make_template_fragment_key("index_page")
         cache.delete(key)
 
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse("index"))
         self.assertContains(response, post.text)
 
     def test_check_comments(self):
@@ -255,20 +258,20 @@ class TestStringMethods(TestCase):
             reverse(
                 "add_comment",
                 kwargs={
-                    'username': self.user.username,
-                    'post_id': post.id
+                    "username": self.user.username,
+                    "post_id": post.id
                 }
             ),
             data={
-                'text': 'Comment',
-                'post': post.id,
-                'author': self.user.id
+                "text": "Comment",
+                "post": post.id,
+                "author": self.user.id
             }
         )
 
-        comment = post.comments.select_related('author').first()
+        comment = post.comments.select_related("author").first()
         self.assertEqual(Comment.objects.count(), 1)
-        self.assertEqual(comment.text, 'Comment')
+        self.assertEqual(comment.text, "Comment")
         self.assertEqual(comment.post, post)
         self.assertEqual(comment.author, self.user)
 
@@ -280,14 +283,14 @@ class TestStringMethods(TestCase):
             reverse(
                 "add_comment",
                 kwargs={
-                    'username': self.user.username,
-                    'post_id': post.id
+                    "username": self.user.username,
+                    "post_id": post.id
                 }
             ),
             data={
-                'text': 'Comment',
-                'post': post.id,
-                'author': self.user.id
+                "text": "Comment",
+                "post": post.id,
+                "author": self.user.id
             }
         )
         self.assertEqual(Comment.objects.count(), 0)
@@ -302,7 +305,7 @@ class TestStringMethods(TestCase):
             reverse(
                 "profile_follow",
                 kwargs={
-                    'username': leo.username,
+                    "username": leo.username,
                 }
             )
         )
@@ -322,7 +325,7 @@ class TestStringMethods(TestCase):
             reverse(
                 "profile_follow",
                 kwargs={
-                    'username': leo.username,
+                    "username": leo.username,
                 }
             )
         )
@@ -334,12 +337,13 @@ class TestStringMethods(TestCase):
         leo = User.objects.create_user(
             username=user_2, email=email_2, password=password_2
         )
-        Follow.objects.create(user=self.user, author=leo)
+        leo.following.create(user=self.user, author=leo)
+
         self.client.post(
             reverse(
                 "profile_unfollow",
                 kwargs={
-                    'username': leo.username,
+                    "username": leo.username,
                 }
             )
         )
@@ -348,12 +352,12 @@ class TestStringMethods(TestCase):
     def test_check_follow_posts(
             self, user_2=user_2, email_2=email_2, password_2=password_2
     ):
-        image = self.upload_image()
+        image = self.get_image()
         leo = User.objects.create_user(
             username=user_2, email=email_2, password=password_2
         )
 
-        Post.objects.create(
+        post = Post.objects.create(
             text="post leo", group=self.group, author=leo, image=image
         )
 
@@ -361,18 +365,18 @@ class TestStringMethods(TestCase):
             reverse(
                 "profile_follow",
                 kwargs={
-                    'username': leo.username,
+                    "username": leo.username,
                 }
             )
         )
         self.check_contain_post(
-            reverse("follow_index"), leo, self.group, "post leo"
+            reverse("follow_index"), leo, self.group, post.text
         )
 
     def test_check_non_follow_posts(
             self, user_3=user_3, email_3=email_3, password_3=password_3
     ):
-        image = self.upload_image()
+        image = self.get_image()
 
         mao = User.objects.create_user(
             username=user_3, email=email_3, password=password_3

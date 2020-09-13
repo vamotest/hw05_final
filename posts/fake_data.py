@@ -10,10 +10,10 @@ class FakeData:
         return self.fake.password(length=40, special_chars=True)
 
     def fake_username(self):
-        return self.fake.simple_profile()['username']
+        return self.fake.simple_profile()["username"]
 
     def fake_email(self):
-        return self.fake.simple_profile()['mail']
+        return self.fake.simple_profile()["mail"]
 
     def fake_text(self):
         return self.fake.text()
