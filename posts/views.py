@@ -117,15 +117,14 @@ def add_comment(request, username, post_id):
     if request.method != "POST":
         return redirect("post", username=username, post_id=post_id)
 
-    if request.method == "POST":
-        form = CommentForm(request.POST)
-
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.author = request.user
-            comment.post = post
-            comment.save()
-            return redirect("post", username=username, post_id=post_id)
+    form = CommentForm(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        comment.save()
+        return redirect("post", username=username, post_id=post_id)
+    return redirect("post", username=post.author.username, post_id=post_id)
 
 
 @login_required
